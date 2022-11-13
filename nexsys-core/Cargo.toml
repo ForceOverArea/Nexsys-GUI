@@ -1,0 +1,24 @@
+[package]
+name = "nexsys-core"
+version = "0.1.2"
+edition = "2021"
+description = "Solve nonlinear equations using Newton's method"
+license = "BSD-3-Clause"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "nexsys_core"
+crate-type = ["lib", "cdylib"]
+
+[features]
+python_ffi = ["pyo3"]
+default = ["python_ffi"]
+
+[dependencies]
+meval = "0.2.0"
+
+[dependencies.pyo3]
+version = "0.17.3"
+optional = true
+features = ["extension-module"]
