@@ -1,7 +1,7 @@
 # [->] Nexsys
 An equation solving program written in Python and Rust 🐍🦀
 
-Nexsys (iNtuitive Equations, eXpressions, and SYStems) is inspired by 
+Nexsys (i**N**tuitive **E**quations, e**X**pressions, and **SYS**tems) is inspired by 
 Engineering Equation Solver (EES), which is a program intended for engineers 
 working with thermal or fluids-heavy systems. This tool allows engineers to 
 develop massive mathematical models of the systems they work with and produce 
