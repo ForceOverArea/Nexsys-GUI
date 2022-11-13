@@ -1,4 +1,4 @@
-# Nexsys
+# [->] Nexsys
 An equation solving program written in Python and Rust 🐍🦀
 
 Nexsys (iNtuitive Equations, eXpressions, and SYStems) is inspired by 
