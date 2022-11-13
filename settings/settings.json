@@ -1,6 +1,7 @@
 {
     "DEC_PLACES": 2,
-    "SOLN_COLS": 3,
-    "ACCURACY": "1E-320",
+    "SOLN_COLS": 5,
+    "TOLERANCE": "1E-5",
+    "MAX_ITERATIONS": 300,
     "TEXT_EDITOR": "notepad.exe"
 }
