@@ -10,6 +10,7 @@ from tkinter.scrolledtext import ScrolledText
 from modules.file_windows import *
 from modules.settings_window import *
 from modules.plot_window import *
+from modules.convert import UnitHelper
 
 class NexsysGUI:
     """
@@ -22,6 +23,7 @@ class NexsysGUI:
         try: self.window.iconbitmap("./images/Nexsys.ico")
         except: pass
         self.current_file = ""
+        self.uh = UnitHelper()
         Grid.rowconfigure(self.window, 1, weight=1)
         Grid.columnconfigure(self.window, 0, weight=1)
 
@@ -67,6 +69,8 @@ class NexsysGUI:
         self.exprs_box      .grid(columnspan=numcols, column=0, row=1, padx=10, pady=10, sticky="nsew")
         self.label          .grid(columnspan = numcols, row = 2)
 
+        self.soln_window = None
+
     def fetch_code(self) -> str:
         """Returns only the equations from the expressions box."""
         return self.exprs_box.get("0.0",END).strip()
@@ -80,8 +84,10 @@ class NexsysGUI:
     def open_solution_window(self):
         """Show the solution to the current system."""
         self.save_file()
-        sw = solution_window(self)
-        sw.window.mainloop()
+        if self.soln_window != None:
+            self.soln_window.close()
+        self.soln_window = SolutionWindow(self)
+        self.soln_window.window.mainloop()
 
     def open_table_solution_window(self):
         """Show the solutions for a table of values."""
@@ -112,12 +118,6 @@ class NexsysGUI:
         self.exprs_box.delete("0.0",END)
         self.exprs_box.insert(END, self.open_file())
 
-    # def edit_unit_config(self):
-    #     """Edit the units.json file."""
-    #     with open("settings.json", "r") as f:
-    #         text_editor = load(f)["TEXT_EDITOR"]
-    #     sh(f"{text_editor} ./settings/units.json")
-
     def new_file(self):
         """Create a new Nexsys .nxs file"""
         nfw = NewFileWindow(self)
@@ -142,7 +142,7 @@ class NexsysGUI:
         self.exprs_box.focus()
         self.window.mainloop()
 
-class solution_window:
+class SolutionWindow:
     """Window for displaying solution."""
 
     def __init__(self, parent: NexsysGUI):
@@ -158,8 +158,14 @@ class solution_window:
             settings = load(f)
             dec_places = settings["DEC_PLACES"]
             soln_cols = settings["SOLN_COLS"]
+            
 
-        system = Nexsys(self.parent.fetch_code())
+        system = Nexsys(
+            self.parent.fetch_code(),
+            tolerance = float(settings["TOLERANCE"]),
+            limit = int(settings["MAX_ITERATIONS"]),
+            unit_helper = self.parent.uh
+            )
         try:
             start = time()
             soln = system.solve()
@@ -187,6 +193,7 @@ class solution_window:
 
 
     def close(self):
+        self.parent.soln_window = None
         self.window.destroy()
 
 NexsysGUI().start()

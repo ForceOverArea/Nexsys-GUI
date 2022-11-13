@@ -82,7 +82,7 @@ class PlotWindow:
         for x in domain:
             eqns = self.parent.fetch_code()
             system = Nexsys(eqns.replace(self.ind_var.get(), str(x)))
-            y.append(system.solve(500)[self.dep_var.get()])
+            y.append(system.solve()[self.dep_var.get()])
             
             pb.increment()
             self.plot_button.configure(text = pb.show())

@@ -1,6 +1,8 @@
 from copy import deepcopy
-from nexsys_rs import py_solve
+from json import load
+from nexsys_core import py_mvnr
 from re import findall, IGNORECASE
+from modules.convert import convert
 
 def uar(myDict:dict, newDict:dict):
         """Stands for 'update and return'"""
@@ -20,15 +22,24 @@ class Nexsys:
 
     def __init__(self, code:str, **kwargs):
         self.bounds = {} 
+        self.guesses = {}
         self.params = {}
 
-        self.limit = 10_000
+        with open("./settings/settings.json", "r") as f:
+            settings = load(f)
+
+        self.limit = 300
         self.tolerance = 1e-5
-        self.min_delta = 1e-300
+        self.uh = None
 
         if "limit" in kwargs: self.limit = kwargs["limit"]
         if "tolerance" in kwargs: self.tolerance = kwargs["tolerance"]
-        if "min_delta" in kwargs: self.min_delta = kwargs["min_delta"]
+        if "unit_helper" in kwargs: self.uh = kwargs["unit_helper"]
+        
+        search = "[[a-z0-9_/^\-]+->[a-z0-9_/^\-]+]"
+        for uc in findall(search, code, IGNORECASE):
+            fro, to = uc[1:-1].split("->")
+            code = code.replace(uc, " * " + str(convert(fro, to, self.uh)))
 
         # Evaluate parameters; i.e. anything with a `:`
         for line in code.split("\n"):
@@ -39,9 +50,22 @@ class Nexsys:
                     deepcopy(self.params)
                 )
 
+        # Sub parameters into code prior to any further interpretation
         for char in self.params:
             code = code.replace(char, f"({self.params[char]})")
 
+        # Establish specified guess values
+        search = "guess -?[0-9]+ for [a-z_]+"
+        for v in findall(search, code, IGNORECASE):
+            
+            print(f"found guess for {v}")
+            terms = v.split() # arrange the guess terms for interpretation
+            var = terms[3]
+            val = terms[1]
+
+            self.guesses[var] = float(val)
+
+        # Establish domains for all variables
         search = "keep [a-z_]+ on [-?[0-9]+, ?-?[0-9]+]"
         for v in findall(search, code, IGNORECASE):
             
@@ -51,21 +75,31 @@ class Nexsys:
 
             self.bounds[var] = [ float(nums[0][1:]), float(nums[1][:-1]) ]
 
-        self.system = "\n".join([line for line in code.split("\n") if "=" in line])
+        # Assign default guess value to all other variables
+        eqns = "\n".join([line.replace("=", "-") for line in code.split("\n") if "=" in line])
+        for v in findall("[a-z_]+", eqns, IGNORECASE):
+            if v not in self.guesses:
+                self.guesses[v] = 1.0
+
+        # Make list of equations to pass to nexsys-core solver function
+        self.system = eqns.split("\n")
 
     def solve(self) -> dict:
         """
         Send code to the Nexsys Rust solver to produce a solution.
         """
         print(f"SOE: {self.system}")
+        print(f"guess: {self.guesses}")
         print(f"bounds: {self.bounds}")
+        print(f"tolerance: {self.tolerance}")
+        print(f"Max Iter.: {self.limit}")
 
-        soln = py_solve(
+        soln = py_mvnr(
             self.system, 
+            self.guesses,
             self.bounds, 
-            self.limit, 
             self.tolerance, 
-            self.min_delta
+            self.limit
             )
 
         return uar(soln, self.params) # returns solved variables AND the parameters used in the solution

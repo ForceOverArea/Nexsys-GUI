@@ -9,8 +9,6 @@ class SettingsWindow:
 
     def __init__(self, parent):
 
-        self.scale = 10 # parametrizes the scaling of the accuracy setting
-
         with open("./settings/settings.json", "r") as f:            
             self.settings = load(f)
         
@@ -25,8 +23,10 @@ class SettingsWindow:
         self.truncate_slider =      Scale(self.window, from_ = 0, to = 10, tickinterval = 2, orient = "horizontal")
         self.slncols_label =        Label(self.window, text = "Sln. Window Columns:")
         self.slncols_slider =       Scale(self.window, from_ = 1, to = 5, tickinterval = 1, orient = "horizontal")
-        # self.accuracy_label =       Label(self.window, text = f"Solver Accuracy (Res. = 1E-{self.scale}X):")
-        # self.accuracy_slider =      Scale(self.window, from_ = 1, to = 32, tickinterval = 31, orient = "horizontal")
+        self.tolerance_label =      Label(self.window, text = f"Solver Error Tolerance (Res. = 1E-X):")
+        self.tolerance_slider =     Scale(self.window, from_ = 1, to = 5, tickinterval = 1, orient = "horizontal")
+        self.iterations_label =     Label(self.window, text = f"Max Allowed Iterations")
+        self.iterations_slider =    Scale(self.window, from_ = 300, to = 10000, tickinterval = 9700, orient = "horizontal")
         self.text_editor_label =    Label(self.window, text = "Change text editor:")
         self.text_editor_box =      Button(self.window, text = "Browse", command = self.change_text_editor)
         self.unit_label =           Label(self.window, text = "Edit Units file:")
@@ -37,17 +37,20 @@ class SettingsWindow:
         self.truncate_slider        .grid(column = 1, row = 0, pady = 10, padx = 20, sticky = "w")
         self.slncols_label          .grid(column = 0, row = 1, pady = 10, padx = 20)
         self.slncols_slider         .grid(column = 1, row = 1, pady = 10, padx = 20, sticky = "w")
-        # self.accuracy_label         .grid(column = 0, row = 2, pady = 10, padx = 20)
-        # self.accuracy_slider        .grid(column = 1, row = 2, pady = 10, padx = 20, sticky = "w")
-        self.text_editor_label      .grid(column = 0, row = 3, pady = 10, padx = 20)
-        self.text_editor_box        .grid(column = 1, row = 3, pady = 10, padx = 20, sticky = "w")
-        self.unit_label             .grid(column = 0, row = 4, pady = 10, padx = 20)
-        self.unit_button            .grid(column = 1, row = 4, pady = 10, padx = 20, sticky = "w")
-        self.apply_button           .grid(columnspan = 2, row = 5, pady = 10, padx = 10, sticky = "ew")
+        self.tolerance_label        .grid(column = 0, row = 2, pady = 10, padx = 20)
+        self.tolerance_slider       .grid(column = 1, row = 2, pady = 10, padx = 20, sticky = "w")
+        self.iterations_label       .grid(column = 0, row = 3, pady = 10, padx = 20)
+        self.iterations_slider      .grid(column = 1, row = 3, pady = 10, padx = 20, sticky = "w")
+        self.text_editor_label      .grid(column = 0, row = 4, pady = 10, padx = 20)
+        self.text_editor_box        .grid(column = 1, row = 4, pady = 10, padx = 20, sticky = "w")
+        self.unit_label             .grid(column = 0, row = 5, pady = 10, padx = 20)
+        self.unit_button            .grid(column = 1, row = 5, pady = 10, padx = 20, sticky = "w")
+        self.apply_button           .grid(columnspan = 2, row = 6, pady = 10, padx = 10, sticky = "ew")
 
         self.truncate_slider        .set(self.settings["DEC_PLACES"])
         self.slncols_slider         .set(self.settings["SOLN_COLS"])
-        # self.accuracy_slider        .set(int(self.settings["ACCURACY"][3:])/self.scale)
+        self.tolerance_slider       .set(int(self.settings["TOLERANCE"][3:]))
+        self.iterations_slider      .set(int(self.settings["MAX_ITERATIONS"]))
 
     def change_text_editor(self):
         """Choose a default text editor for editing units.txt"""
@@ -66,7 +69,8 @@ class SettingsWindow:
     def apply_changes(self):
         self.settings["DEC_PLACES"] = int(self.truncate_slider.get())
         self.settings["SOLN_COLS"] = int(self.slncols_slider.get())
-        # self.settings["ACCURACY"] = f"1E-{self.accuracy_slider.get()*self.scale}"
+        self.settings["TOLERANCE"] = f"1E-{self.tolerance_slider.get()}"
+        self.settings["MAX_ITERATIONS"] = int(self.iterations_slider.get())
 
         print(self.settings)
 
