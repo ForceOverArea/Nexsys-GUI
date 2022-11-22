@@ -1,5 +1,6 @@
 use super::*;
-use linalg::NxN;
+use linalg::{ NxN, mat_vec_mul };
+use mvcalc::SolverResult;
 
 fn invertible_matrix_2() -> NxN {
     let res = vec![ 
@@ -136,38 +137,6 @@ fn test_jacobian() {
 }
 
 #[test]
-fn test_newton_iteration() {
-    let my_sys = vec![
-        "x^2 + y",
-        "y -   x"
-    ];
-
-    let guess = HashMap::from([
-        ("x", Variable::new(1.0, None)),
-        ("y", Variable::new(1.0, None))
-    ]); 
-
-    let mut x: Vec<HashMap<&str, Variable>> = Vec::new();
-
-    x.push(
-        newton_iteration(&my_sys, guess)
-        .unwrap()
-    );
-
-    for i in 0..1500 {
-        x.push(
-            newton_iteration(&my_sys, x[i].clone())
-            .unwrap()
-        );
-    }
-    
-    let res = x.remove(x.len() - 1);
-    
-    assert_eq!(res["x"].as_f64().round(), 0.0);
-    assert_eq!(res["y"].as_f64().round(), 0.0);
-}
-
-#[test]
 fn test_solver() {
     let case_a = vec![
         "x^2 + y",
@@ -185,4 +154,21 @@ fn test_solver() {
     checkit(case_a, soln_a);
 
     checkit(case_b, soln_b);
+}
+
+#[test]
+fn test_newton_raphson() {
+    let equation = "x^2 + x - 1";
+    let guess = ("x", Variable::new(1.0, None));
+    
+    let ans = newton_raphson(
+        equation, 
+        guess, 
+        0.0001, 
+        500,
+        None
+    ).unwrap();
+
+    println!("Soln: {:?}", ans.1);
+    assert_eq!(ans.1.as_f64().round(), 1.0);
 }
